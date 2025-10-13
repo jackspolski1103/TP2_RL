@@ -1,0 +1,24 @@
+============================================================
+REPORTE DE COMPARACIÓN: DQN vs REINFORCE en CartPole-v1
+============================================================
+Generado: 2025-10-13 09:24:24
+
+DQN (Deep Q-Network):
+  - Episodios entrenados: 800
+  - Recompensa promedio final: 190.56
+  - Recompensa máxima: 250.00
+  - Resuelto en episodio: 317
+
+REINFORCE:
+  - Episodios entrenados: 1200
+  - Recompensa promedio final: 184.68
+  - Recompensa máxima: 261.26
+  - No resuelto (threshold: 195.0)
+
+CONCLUSIONES:
+- DQN típicamente converge más rápido y de forma más estable
+- REINFORCE puede requerir más episodios pero es más simple conceptualmente
+- DQN usa replay buffer y target network para estabilidad
+- REINFORCE usa gradientes de política directamente
+
+============================================================
