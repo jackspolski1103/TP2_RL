@@ -2068,6 +2068,39 @@ wheels = [
 ]
 
 [[package]]
+name = "minatar"
+version = "1.0.15"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cycler" },
+    { name = "kiwisolver", version = "1.4.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "kiwisolver", version = "1.4.9", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "matplotlib", version = "3.7.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "matplotlib", version = "3.10.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "numpy", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pandas", version = "2.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pyparsing", version = "3.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pyparsing", version = "3.2.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "python-dateutil" },
+    { name = "pytz" },
+    { name = "scipy", version = "1.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "seaborn" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/73/c3/4ea70dd08545e25ef53b07f3d64de36ca24d0b5f8579991f35557fc427f4/MinAtar-1.0.15.tar.gz", hash = "sha256:279bbf7a29d90a6e86a4f475943122f52b4a14ab1480a6fbb4d51f2a5763333a", size = 16509, upload-time = "2023-05-29T16:47:17.129Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c6/6d/aa5ef58c2c45a8de8ac37599179df26b6fd47781d6b2614d2116b8bfca5c/MinAtar-1.0.15-py3-none-any.whl", hash = "sha256:f40450e133c552b97222702bb7b1c5254b47758390f4bd25e411399af0b21d42", size = 16606, upload-time = "2023-05-29T16:47:15.154Z" },
+]
+
+[[package]]
 name = "mpmath"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4196,11 +4229,14 @@ name = "tp2-dqn"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "ale-py", version = "0.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "ale-py", version = "0.11.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "gymnasium", version = "1.1.1", source = { registry = "https://pypi.org/simple" }, extra = ["atari", "classic-control"], marker = "python_full_version < '3.10'" },
     { name = "gymnasium", version = "1.2.1", source = { registry = "https://pypi.org/simple" }, extra = ["atari", "classic-control"], marker = "python_full_version >= '3.10'" },
     { name = "matplotlib", version = "3.7.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "matplotlib", version = "3.10.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "minatar" },
     { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
@@ -4244,10 +4280,12 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ale-py", specifier = ">=0.10.1" },
     { name = "gymnasium", specifier = ">=1.0.0" },
     { name = "gymnasium", extras = ["atari"], specifier = ">=1.0.0" },
     { name = "gymnasium", extras = ["classic-control"], specifier = ">=1.0.0" },
     { name = "matplotlib", specifier = ">=3.5.0" },
+    { name = "minatar" },
     { name = "numpy", specifier = ">=1.21.0" },
     { name = "opencv-python", specifier = ">=4.5.0" },
     { name = "pandas", specifier = ">=1.3.0" },

@@ -18,6 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 import cv2
 
 from dqn_agent import DQNAgent
+from minatar_wrapper import MinAtarWrapper
 
 
 class FrameStack:
@@ -72,44 +73,41 @@ class FrameStack:
         Obtiene el estado actual como stack de frames.
         
         Returns:
-            stacked_frames: Array de shape (4, 84, 84)
+            stacked_frames: Array de shape (16, 10, 10) para MinAtar CNN
         """
-        return np.array(list(self.frames))
+        # Reorganizar de (4, 10, 10, 4) a (16, 10, 10)
+        frames = np.array(list(self.frames))  # Shape: (4, 10, 10, 4)
+        # Reorganizar: (4, 10, 10, 4) -> (4*4, 10, 10) = (16, 10, 10)
+        stacked = frames.transpose(0, 3, 1, 2)  # (4, 4, 10, 10)
+        stacked = stacked.reshape(16, 10, 10)  # (16, 10, 10)
+        return stacked
 
 
 def preprocess_frame(frame: np.ndarray) -> np.ndarray:
     """
-    Preprocesa un frame de Atari para entrenamiento.
+    Preprocesa un frame de MinAtar para entrenamiento.
     
     Args:
-        frame: Frame original de Atari (210x160x3)
+        frame: Frame original de MinAtar (10x10x4)
         
     Returns:
-        processed_frame: Frame preprocesado (84x84) en escala de grises
+        processed_frame: Frame preprocesado (10x10x4) ya normalizado
     """
-    # Convertir a escala de grises
-    if len(frame.shape) == 3:
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    else:
-        gray = frame
-    
-    # Redimensionar a 84x84
-    resized = cv2.resize(gray, (84, 84), interpolation=cv2.INTER_AREA)
-    
-    # Normalizar a [0, 255] como enteros (la CNN normalizará internamente)
-    return resized.astype(np.uint8)
+    # MinAtar ya viene preprocesado y normalizado
+    # Solo aseguramos que sea float32
+    return frame.astype(np.float32)
 
 
 def train_breakout(episodes: int = 1000,
                   gamma: float = 0.99,
-                  lr: float = 2.5e-4,
+                  lr: float = 1e-3,  # Aumentado para aprendizaje más rápido
                   buffer_capacity: int = 500000,
                   epsilon_start: float = 1.0,
                   epsilon_min: float = 0.1,
-                  epsilon_decay: float = 0.0001,  # Decaimiento más lento para Breakout
-                  batch_size: int = 32,
-                  target_update_freq: int = 10000,
-                  start_learning: int = 50000,
+                  epsilon_decay: float = 0.001,  # Decaimiento más rápido
+                  batch_size: int = 64,  # Aumentado para mejor estabilidad
+                  target_update_freq: int = 1000,  # Actualización más frecuente
+                  start_learning: int = 1000,  # Empezar a entrenar mucho antes
                   seed: int = 42,
                   save_model: bool = True,
                   log_tensorboard: bool = True) -> Tuple[DQNAgent, List[float], List[float]]:
@@ -140,20 +138,23 @@ def train_breakout(episodes: int = 1000,
     torch.manual_seed(seed)
     np.random.seed(seed)
     
-    # Crear entorno Breakout
-    env = gym.make('ALE/Breakout-v5')
+    # Crear entorno Breakout usando MinAtar
+    env = MinAtarWrapper('breakout')
     env.action_space.seed(seed)
     
     # Obtener dimensiones
     action_size = env.action_space.n
-    state_size = (4, 84, 84)  # 4 frames apilados de 84x84
+    # Para MinAtar: cada frame es 10x10x4, y apilamos 4 frames
+    # El formato para CNN debe ser (channels, height, width)
+    # Necesitamos reorganizar: (4, 10, 10, 4) -> (4*4, 10, 10) = (16, 10, 10)
+    state_size = (16, 10, 10)  # 16 canales (4 frames * 4 canales por frame)
     
-    print(f"=== Entrenamiento DQN en Breakout-v5 ===")
+    print(f"=== Entrenamiento DQN en MinAtar Breakout ===")
     print(f"Espacio de estados: {state_size}")
     print(f"Espacio de acciones: {action_size}")
     print(f"Episodios: {episodes}")
     print(f"Dispositivo: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
-    print("ADVERTENCIA: Breakout requiere mucho tiempo de entrenamiento!")
+    print("NOTA: MinAtar Breakout es más rápido que Atari Breakout!")
     
     # Inicializar agente DQN con CNN
     agent = DQNAgent(
@@ -320,7 +321,7 @@ def evaluate_breakout(model_path: str,
                      render: bool = False,
                      seed: int = 42) -> float:
     """
-    Evalúa un agente DQN entrenado en Breakout-v5.
+    Evalúa un agente DQN entrenado en MinAtar Breakout.
     
     Args:
         model_path: Ruta del modelo entrenado
@@ -331,17 +332,13 @@ def evaluate_breakout(model_path: str,
     Returns:
         avg_score: Puntuación promedio
     """
-    # Crear entorno
-    if render:
-        env = gym.make('ALE/Breakout-v5', render_mode='human')
-    else:
-        env = gym.make('ALE/Breakout-v5')
-    
+    # Crear entorno MinAtar
+    env = MinAtarWrapper('breakout')
     env.action_space.seed(seed)
     
     # Obtener dimensiones
     action_size = env.action_space.n
-    state_size = (4, 84, 84)
+    state_size = (16, 10, 10)  # 16 canales (4 frames * 4 canales por frame)
     
     # Crear agente y cargar modelo
     agent = DQNAgent(

@@ -23,6 +23,8 @@ dependencies = [
     "tensorboardX>=2.4",
     "Pillow>=8.3.0",
     "opencv-python>=4.5.0",
+    "ale-py>=0.10.1",
+    "minatar",
 ]
 
 [project.optional-dependencies]

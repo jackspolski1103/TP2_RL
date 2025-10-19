@@ -117,6 +117,63 @@ class CNNNetwork(nn.Module):
         return x
 
 
+class MinAtarCNNNetwork(nn.Module):
+    """
+    Red CNN específica para entornos MinAtar.
+    
+    Diseñada para imágenes pequeñas (10x10) con múltiples canales.
+    """
+    
+    def __init__(self, input_channels: int, output_size: int):
+        """
+        Inicializa la red CNN para MinAtar.
+        
+        Args:
+            input_channels: Número de canales de entrada (16 para MinAtar con frame stacking)
+            output_size: Número de acciones
+        """
+        super(MinAtarCNNNetwork, self).__init__()
+        
+        # Capas convolucionales adaptadas para MinAtar (10x10)
+        self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+        
+        # Calcular el tamaño de la salida de las convoluciones
+        # Para entrada 10x10: conv1 -> 10x10, conv2 -> 10x10, conv3 -> 10x10
+        conv_output_size = 64 * 10 * 10  # 6400
+        
+        # Capas totalmente conectadas
+        self.fc1 = nn.Linear(conv_output_size, 256)
+        self.fc2 = nn.Linear(256, output_size)
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass de la red CNN para MinAtar.
+        
+        Args:
+            x: Tensor de entrada (batch_size, channels, height, width)
+            
+        Returns:
+            q_values: Valores Q para cada acción (batch_size, output_size)
+        """
+        # MinAtar ya viene normalizado, no necesitamos dividir por 255
+        
+        # Capas convolucionales con ReLU
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        
+        # Aplanar para capas FC
+        x = x.view(x.size(0), -1)
+        
+        # Capas totalmente conectadas
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        
+        return x
+
+
 class DQNAgent:
     """
     Agente que implementa el algoritmo Deep Q-Network.
@@ -194,8 +251,14 @@ class DQNAgent:
             if not isinstance(state_size, tuple) or len(state_size) != 3:
                 raise ValueError("Para CNN, state_size debe ser una tupla (channels, height, width)")
             channels, height, width = state_size
-            self.q_network = CNNNetwork(channels, action_size).to(self.device)
-            self.target_network = CNNNetwork(channels, action_size).to(self.device)
+            
+            # Usar CNN específica para MinAtar si las dimensiones son pequeñas
+            if height <= 10 and width <= 10:
+                self.q_network = MinAtarCNNNetwork(channels, action_size).to(self.device)
+                self.target_network = MinAtarCNNNetwork(channels, action_size).to(self.device)
+            else:
+                self.q_network = CNNNetwork(channels, action_size).to(self.device)
+                self.target_network = CNNNetwork(channels, action_size).to(self.device)
         else:
             raise ValueError(f"model_type debe ser 'mlp' o 'cnn', recibido: {model_type}")
         
