@@ -100,14 +100,14 @@ def preprocess_frame(frame: np.ndarray) -> np.ndarray:
 
 def train_breakout(episodes: int = 1000,
                   gamma: float = 0.99,
-                  lr: float = 1e-3,  # Aumentado para aprendizaje más rápido
+                  lr: float = 5e-3,  # Aumentado significativamente para aprendizaje más rápido
                   buffer_capacity: int = 500000,
                   epsilon_start: float = 1.0,
-                  epsilon_min: float = 0.1,
-                  epsilon_decay: float = 0.001,  # Decaimiento más rápido
-                  batch_size: int = 64,  # Aumentado para mejor estabilidad
-                  target_update_freq: int = 1000,  # Actualización más frecuente
-                  start_learning: int = 1000,  # Empezar a entrenar mucho antes
+                  epsilon_min: float = 0.05,  # Reducido para más explotación
+                  epsilon_decay: float = 0.005,  # Decaimiento mucho más rápido
+                  batch_size: int = 128,  # Aumentado para mejor estabilidad y aprendizaje
+                  target_update_freq: int = 500,  # Actualización más frecuente
+                  start_learning: int = 500,  # Empezar a entrenar aún antes
                   seed: int = 42,
                   save_model: bool = True,
                   log_tensorboard: bool = True) -> Tuple[DQNAgent, List[float], List[float]]:
@@ -414,9 +414,9 @@ def main():
                        help="Ruta del modelo")
     parser.add_argument("--render", action="store_true", help="Renderizar entorno")
     parser.add_argument("--seed", type=int, default=42, help="Semilla aleatoria")
-    parser.add_argument("--lr", type=float, default=2.5e-4, help="Tasa de aprendizaje")
+    parser.add_argument("--lr", type=float, default=5e-3, help="Tasa de aprendizaje")
     parser.add_argument("--gamma", type=float, default=0.99, help="Factor de descuento")
-    parser.add_argument("--epsilon-decay", type=float, default=0.0001, help="Tasa de decaimiento de epsilon")
+    parser.add_argument("--epsilon-decay", type=float, default=0.005, help="Tasa de decaimiento de epsilon")
     parser.add_argument("--no-tensorboard", action="store_true", help="Desactivar TensorBoard")
     parser.add_argument("--no-save", action="store_true", help="No guardar modelo")
     

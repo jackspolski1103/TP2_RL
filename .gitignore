@@ -1,0 +1,4 @@
+/runs
+/checkpoints
+*.pyc
+__pycache__/
