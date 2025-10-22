@@ -204,8 +204,8 @@ def train_qlearning(n_episodes=5000, alpha=0.8, gamma=0.99,
         rewards: Lista de recompensas por episodio
         avg_rewards: Lista de recompensas promedio cada eval_interval episodios
     """
-    # Inicializar entorno FrozenLake-v1 (4x4)
-    env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=True)
+    # Inicializar entorno FrozenLake-v1 (4x4) - DETERMINÍSTICO
+    env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=False)
     
     # Obtener dimensiones del entorno
     n_states = env.observation_space.n
@@ -296,8 +296,8 @@ def evaluate_qlearning(q_table, n_eval_episodes=100, epsilon=0.0, verbose=True):
     Returns:
         success_rate: Porcentaje de éxito (promedio de recompensas)
     """
-    # Inicializar entorno
-    env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=True)
+    # Inicializar entorno - DETERMINÍSTICO
+    env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=False)
     n_actions = env.action_space.n
     
     # Crear agente con tabla Q cargada
