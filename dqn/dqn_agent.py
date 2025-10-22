@@ -416,7 +416,7 @@ class DQNAgent:
         Args:
             filepath: Ruta del archivo del modelo
         """
-        checkpoint = torch.load(filepath, map_location=self.device)
+        checkpoint = torch.load(filepath, map_location=self.device, weights_only=False)
         
         # Restaurar redes
         self.q_network.load_state_dict(checkpoint['q_network_state_dict'])
