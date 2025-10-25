@@ -17,6 +17,9 @@ from collections import deque
 from torch.utils.tensorboard import SummaryWriter
 import cv2
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from dqn_agent import DQNAgent
 from minatar_wrapper import MinAtarWrapper
 
