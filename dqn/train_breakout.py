@@ -104,7 +104,7 @@ def preprocess_frame(frame: np.ndarray) -> np.ndarray:
 def train_breakout(episodes: int = 1000,
                   gamma: float = 0.99,
                   lr: float = 5e-3,  # Aumentado significativamente para aprendizaje más rápido
-                  buffer_capacity: int = 500000,
+                  buffer_capacity: int = 10000,
                   epsilon_start: float = 1.0,
                   epsilon_min: float = 0.001,  # Reducido para más explotación
                   epsilon_decay: float = 0.005,  # Decaimiento mucho más rápido
@@ -419,15 +419,29 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Entrenar DQN en Breakout-v5")
+    
+    # Parámetros básicos
     parser.add_argument("--episodes", type=int, default=10000, help="Número de episodios")
     parser.add_argument("--eval", action="store_true", help="Evaluar modelo existente")
     parser.add_argument("--model", type=str, default="checkpoints/dqn_breakout.pt", 
                        help="Ruta del modelo")
     parser.add_argument("--render", action="store_true", help="Renderizar entorno")
     parser.add_argument("--seed", type=int, default=42, help="Semilla aleatoria")
+    
+    # Parámetros de aprendizaje
     parser.add_argument("--lr", type=float, default=5e-3, help="Tasa de aprendizaje")
     parser.add_argument("--gamma", type=float, default=0.99, help="Factor de descuento")
+    parser.add_argument("--epsilon-start", type=float, default=1.0, help="Epsilon inicial")
+    parser.add_argument("--epsilon-min", type=float, default=0.001, help="Epsilon mínimo")
     parser.add_argument("--epsilon-decay", type=float, default=0.005, help="Tasa de decaimiento de epsilon")
+    
+    # Parámetros del buffer y entrenamiento
+    parser.add_argument("--buffer-capacity", type=int, default=10000, help="Capacidad del replay buffer")
+    parser.add_argument("--batch-size", type=int, default=128, help="Tamaño del batch")
+    parser.add_argument("--target-update-freq", type=int, default=500, help="Frecuencia de actualización de target network")
+    parser.add_argument("--start-learning", type=int, default=500, help="Pasos antes de empezar a entrenar")
+    
+    # Parámetros de logging y guardado
     parser.add_argument("--no-tensorboard", action="store_true", help="Desactivar TensorBoard")
     parser.add_argument("--no-save", action="store_true", help="No guardar modelo")
     
@@ -447,9 +461,15 @@ def main():
         print("NOTA: Breakout puede tardar varias horas en entrenar!")
         agent, episode_rewards, avg_rewards = train_breakout(
             episodes=args.episodes,
-            lr=args.lr,
             gamma=args.gamma,
+            lr=args.lr,
+            buffer_capacity=args.buffer_capacity,
+            epsilon_start=args.epsilon_start,
+            epsilon_min=args.epsilon_min,
             epsilon_decay=args.epsilon_decay,
+            batch_size=args.batch_size,
+            target_update_freq=args.target_update_freq,
+            start_learning=args.start_learning,
             seed=args.seed,
             save_model=not args.no_save,
             log_tensorboard=not args.no_tensorboard
