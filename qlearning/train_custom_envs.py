@@ -25,7 +25,7 @@ from qlearning_agent import QLearningAgent
 def train_constant_env(n_episodes: int = 1000, learning_rate: float = 0.1, 
                       discount_factor: float = 0.99, epsilon_start: float = 1.0,
                       epsilon_min: float = 0.01, epsilon_decay: float = 0.001,
-                      verbose: bool = True) -> Tuple[Dict, List[float], List[float]]:
+                      verbose: bool = True) -> Tuple[Dict, List[float], List[float], List[float]]:
     """
     Entrena Q-Learning en ConstantRewardEnv.
     
@@ -45,6 +45,7 @@ def train_constant_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         q_table: Tabla Q entrenada
         rewards: Recompensas por episodio
         avg_rewards: Recompensas promedio
+        losses: Pérdidas promedio
     """
     if verbose:
         print("🎯 Entrenando en ConstantRewardEnv")
@@ -66,11 +67,15 @@ def train_constant_env(n_episodes: int = 1000, learning_rate: float = 0.1,
     rewards = []
     avg_rewards = []
     episode_rewards_buffer = []
+    losses = []
+    episode_losses_buffer = []
     
     # Entrenamiento
     for episode in tqdm(range(n_episodes), desc="ConstantRewardEnv", disable=not verbose):
         state, _ = env.reset()
         total_reward = 0
+        total_loss = 0
+        step_count = 0
         done = False
         
         while not done:
@@ -78,8 +83,10 @@ def train_constant_env(n_episodes: int = 1000, learning_rate: float = 0.1,
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
-            # Actualizar Q-table
-            agent.update(state, action, reward, next_state, done)
+            # Actualizar Q-table y obtener error temporal
+            td_error = agent.update(state, action, reward, next_state, done)
+            total_loss += td_error
+            step_count += 1
             
             state = next_state
             total_reward += reward
@@ -87,18 +94,26 @@ def train_constant_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         rewards.append(total_reward)
         episode_rewards_buffer.append(total_reward)
         
+        # Calcular pérdida promedio por paso
+        avg_episode_loss = total_loss / max(step_count, 1)
+        episode_losses_buffer.append(avg_episode_loss)
+        
         # Decaer epsilon
         agent.decay_epsilon(episode, epsilon_decay)
         
         # Calcular promedio cada 50 episodios
         if (episode + 1) % 50 == 0:
             avg_reward = np.mean(episode_rewards_buffer)
+            avg_loss = np.mean(episode_losses_buffer)
             avg_rewards.append(avg_reward)
+            losses.append(avg_loss)
             episode_rewards_buffer = []
+            episode_losses_buffer = []
             
             if verbose and (episode + 1) % 200 == 0:
                 print(f"Episodio {episode + 1}/{n_episodes}, "
                       f"Recompensa promedio: {avg_reward:.3f}, "
+                      f"Pérdida promedio: {avg_loss:.3f}, "
                       f"Epsilon: {agent.epsilon:.3f}")
     
     env.close()
@@ -111,14 +126,15 @@ def train_constant_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         print(f"Valor Q aprendido: {q_table[0][0]:.3f}")
         print(f"Valor esperado: 1.0")
         print(f"Error: {abs(q_table[0][0] - 1.0):.3f}")
+        print(f"Pérdida promedio final: {losses[-1]:.3f}")
     
-    return q_table, rewards, avg_rewards
+    return q_table, rewards, avg_rewards, losses
 
 
 def train_random_obs_env(n_episodes: int = 1000, learning_rate: float = 0.1,
                         discount_factor: float = 0.99, epsilon_start: float = 1.0,
                         epsilon_min: float = 0.01, epsilon_decay: float = 0.001,
-                        verbose: bool = True) -> Tuple[Dict, List[float], List[float]]:
+                        verbose: bool = True) -> Tuple[Dict, List[float], List[float], List[float]]:
     """
     Entrena Q-Learning en RandomObsBinaryRewardEnv.
     
@@ -139,6 +155,7 @@ def train_random_obs_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         q_table: Tabla Q entrenada
         rewards: Recompensas por episodio
         avg_rewards: Recompensas promedio
+        losses: Pérdidas promedio
     """
     if verbose:
         print("🎲 Entrenando en RandomObsBinaryRewardEnv")
@@ -160,11 +177,15 @@ def train_random_obs_env(n_episodes: int = 1000, learning_rate: float = 0.1,
     rewards = []
     avg_rewards = []
     episode_rewards_buffer = []
+    losses = []
+    episode_losses_buffer = []
     
     # Entrenamiento
     for episode in tqdm(range(n_episodes), desc="RandomObsBinaryRewardEnv", disable=not verbose):
         state, _ = env.reset()
         total_reward = 0
+        total_loss = 0
+        step_count = 0
         done = False
         
         while not done:
@@ -172,8 +193,10 @@ def train_random_obs_env(n_episodes: int = 1000, learning_rate: float = 0.1,
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
-            # Actualizar Q-table
-            agent.update(state, action, reward, next_state, done)
+            # Actualizar Q-table y obtener error temporal
+            td_error = agent.update(state, action, reward, next_state, done)
+            total_loss += td_error
+            step_count += 1
             
             state = next_state
             total_reward += reward
@@ -181,18 +204,26 @@ def train_random_obs_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         rewards.append(total_reward)
         episode_rewards_buffer.append(total_reward)
         
+        # Calcular pérdida promedio por paso
+        avg_episode_loss = total_loss / max(step_count, 1)
+        episode_losses_buffer.append(avg_episode_loss)
+        
         # Decaer epsilon
         agent.decay_epsilon(episode, epsilon_decay)
         
         # Calcular promedio cada 50 episodios
         if (episode + 1) % 50 == 0:
             avg_reward = np.mean(episode_rewards_buffer)
+            avg_loss = np.mean(episode_losses_buffer)
             avg_rewards.append(avg_reward)
+            losses.append(avg_loss)
             episode_rewards_buffer = []
+            episode_losses_buffer = []
             
             if verbose and (episode + 1) % 200 == 0:
                 print(f"Episodio {episode + 1}/{n_episodes}, "
                       f"Recompensa promedio: {avg_reward:.3f}, "
+                      f"Pérdida promedio: {avg_loss:.3f}, "
                       f"Epsilon: {agent.epsilon:.3f}")
     
     env.close()
@@ -205,14 +236,15 @@ def train_random_obs_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         print(f"Valor Q para estado 0: {q_table[0][0]:.3f}")
         print(f"Valor Q para estado 1: {q_table[1][0]:.3f}")
         print(f"Valores esperados: -1.0 y +1.0 respectivamente")
+        print(f"Pérdida promedio final: {losses[-1]:.3f}")
     
-    return q_table, rewards, avg_rewards
+    return q_table, rewards, avg_rewards, losses
 
 
 def train_two_step_env(n_episodes: int = 1000, learning_rate: float = 0.1,
                        discount_factor: float = 0.99, epsilon_start: float = 1.0,
                        epsilon_min: float = 0.01, epsilon_decay: float = 0.001,
-                       verbose: bool = True) -> Tuple[Dict, List[float], List[float]]:
+                       verbose: bool = True) -> Tuple[Dict, List[float], List[float], List[float]]:
     """
     Entrena Q-Learning en TwoStepDelayedRewardEnv.
     
@@ -233,6 +265,7 @@ def train_two_step_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         q_table: Tabla Q entrenada
         rewards: Recompensas por episodio
         avg_rewards: Recompensas promedio
+        losses: Pérdidas promedio
     """
     if verbose:
         print("⏱️ Entrenando en TwoStepDelayedRewardEnv")
@@ -254,11 +287,15 @@ def train_two_step_env(n_episodes: int = 1000, learning_rate: float = 0.1,
     rewards = []
     avg_rewards = []
     episode_rewards_buffer = []
+    losses = []
+    episode_losses_buffer = []
     
     # Entrenamiento
     for episode in tqdm(range(n_episodes), desc="TwoStepDelayedRewardEnv", disable=not verbose):
         state, _ = env.reset()
         total_reward = 0
+        total_loss = 0
+        step_count = 0
         done = False
         
         while not done:
@@ -266,8 +303,10 @@ def train_two_step_env(n_episodes: int = 1000, learning_rate: float = 0.1,
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
-            # Actualizar Q-table
-            agent.update(state, action, reward, next_state, done)
+            # Actualizar Q-table y obtener error temporal
+            td_error = agent.update(state, action, reward, next_state, done)
+            total_loss += td_error
+            step_count += 1
             
             state = next_state
             total_reward += reward
@@ -275,18 +314,26 @@ def train_two_step_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         rewards.append(total_reward)
         episode_rewards_buffer.append(total_reward)
         
+        # Calcular pérdida promedio por paso
+        avg_episode_loss = total_loss / max(step_count, 1)
+        episode_losses_buffer.append(avg_episode_loss)
+        
         # Decaer epsilon
         agent.decay_epsilon(episode, epsilon_decay)
         
         # Calcular promedio cada 50 episodios
         if (episode + 1) % 50 == 0:
             avg_reward = np.mean(episode_rewards_buffer)
+            avg_loss = np.mean(episode_losses_buffer)
             avg_rewards.append(avg_reward)
+            losses.append(avg_loss)
             episode_rewards_buffer = []
+            episode_losses_buffer = []
             
             if verbose and (episode + 1) % 200 == 0:
                 print(f"Episodio {episode + 1}/{n_episodes}, "
                       f"Recompensa promedio: {avg_reward:.3f}, "
+                      f"Pérdida promedio: {avg_loss:.3f}, "
                       f"Epsilon: {agent.epsilon:.3f}")
     
     env.close()
@@ -303,8 +350,9 @@ def train_two_step_env(n_episodes: int = 1000, learning_rate: float = 0.1,
         print(f"Valor Q para estado 1: {q_table[1][0]:.3f} (esperado: {expected_q_values[1]:.3f})")
         print(f"Error estado 0: {abs(q_table[0][0] - expected_q_values[0]):.3f}")
         print(f"Error estado 1: {abs(q_table[1][0] - expected_q_values[1]):.3f}")
+        print(f"Pérdida promedio final: {losses[-1]:.3f}")
     
-    return q_table, rewards, avg_rewards
+    return q_table, rewards, avg_rewards, losses
 
 
 def plot_training_results(results: Dict[str, Any], save_path: str = "plots/custom_envs_training.png"):
@@ -331,20 +379,31 @@ def plot_training_results(results: Dict[str, Any], save_path: str = "plots/custo
         episodes = np.arange(1, len(data['rewards']) + 1)
         
         # 1. Loss vs Episodio
-        if len(data['rewards']) > 10:
-            window_size = min(50, len(data['rewards']) // 10)
-            loss_proxy = []
-            for j in range(len(data['rewards'])):
-                start_idx = max(0, j - window_size + 1)
-                window_rewards = data['rewards'][start_idx:j+1]
-                loss_proxy.append(np.std(window_rewards))
-            
-            ax1.plot(episodes, loss_proxy, color=colors[env_name], linewidth=2)
+        if 'losses' in data and len(data['losses']) > 0:
+            # Usar las pérdidas reales trackeadas
+            loss_episodes = np.arange(50, len(data['losses']) * 50 + 1, 50)
+            ax1.plot(loss_episodes, data['losses'], color=colors[env_name], linewidth=2, marker='o', markersize=4)
             ax1.set_xlabel('Episodios')
-            ax1.set_ylabel('Loss (Desv. Est.)')
+            ax1.set_ylabel('Pérdida Promedio (TD Error)')
             ax1.set_title(f'Loss vs Episodio - {names[env_name]}')
             ax1.grid(True, alpha=0.3)
             ax1.set_yscale('log')
+        else:
+            # Fallback: usar desviación estándar como proxy
+            if len(data['rewards']) > 10:
+                window_size = min(50, len(data['rewards']) // 10)
+                loss_proxy = []
+                for j in range(len(data['rewards'])):
+                    start_idx = max(0, j - window_size + 1)
+                    window_rewards = data['rewards'][start_idx:j+1]
+                    loss_proxy.append(np.std(window_rewards))
+                
+                ax1.plot(episodes, loss_proxy, color=colors[env_name], linewidth=2)
+                ax1.set_xlabel('Episodios')
+                ax1.set_ylabel('Loss (Desv. Est.)')
+                ax1.set_title(f'Loss vs Episodio - {names[env_name]}')
+                ax1.grid(True, alpha=0.3)
+                ax1.set_yscale('log')
         
         # 2. Reward vs Episodio
         # Recompensas individuales
@@ -493,7 +552,7 @@ def main():
     
     # 1. Entrenar en ConstantRewardEnv
     print("\n" + "="*60)
-    q_table_constant, rewards_constant, avg_rewards_constant = train_constant_env(
+    q_table_constant, rewards_constant, avg_rewards_constant, losses_constant = train_constant_env(
         n_episodes=n_episodes,
         learning_rate=learning_rate,
         discount_factor=discount_factor,
@@ -505,12 +564,13 @@ def main():
     results['constant'] = {
         'q_table': q_table_constant,
         'rewards': rewards_constant,
-        'avg_rewards': avg_rewards_constant
+        'avg_rewards': avg_rewards_constant,
+        'losses': losses_constant
     }
     
     # 2. Entrenar en RandomObsBinaryRewardEnv
     print("\n" + "="*60)
-    q_table_random, rewards_random, avg_rewards_random = train_random_obs_env(
+    q_table_random, rewards_random, avg_rewards_random, losses_random = train_random_obs_env(
         n_episodes=n_episodes,
         learning_rate=learning_rate,
         discount_factor=discount_factor,
@@ -522,12 +582,13 @@ def main():
     results['random_obs'] = {
         'q_table': q_table_random,
         'rewards': rewards_random,
-        'avg_rewards': avg_rewards_random
+        'avg_rewards': avg_rewards_random,
+        'losses': losses_random
     }
     
     # 3. Entrenar en TwoStepDelayedRewardEnv
     print("\n" + "="*60)
-    q_table_two_step, rewards_two_step, avg_rewards_two_step = train_two_step_env(
+    q_table_two_step, rewards_two_step, avg_rewards_two_step, losses_two_step = train_two_step_env(
         n_episodes=n_episodes,
         learning_rate=learning_rate,
         discount_factor=discount_factor,
@@ -539,7 +600,8 @@ def main():
     results['two_step'] = {
         'q_table': q_table_two_step,
         'rewards': rewards_two_step,
-        'avg_rewards': avg_rewards_two_step
+        'avg_rewards': avg_rewards_two_step,
+        'losses': losses_two_step
     }
     
     # 4. Generar gráficos comparativos

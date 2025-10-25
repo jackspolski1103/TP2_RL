@@ -83,6 +83,9 @@ class QLearningAgent:
             reward: Recompensa recibida
             next_state: Nuevo estado
             done: Si el episodio terminó
+            
+        Returns:
+            td_error: Error temporal (diferencia entre target y valor actual)
         """
         # Valor Q actual
         current_q = self.q_table[state][action]
@@ -95,8 +98,13 @@ class QLearningAgent:
             # Q-Learning: r + γ * max_a'(Q(s',a'))
             target = reward + self.discount_factor * np.max(self.q_table[next_state])
         
+        # Calcular error temporal (TD error)
+        td_error = target - current_q
+        
         # Actualizar Q(s,a) usando la regla de Q-Learning
-        self.q_table[state][action] = current_q + self.learning_rate * (target - current_q)
+        self.q_table[state][action] = current_q + self.learning_rate * td_error
+        
+        return abs(td_error)  # Retornar valor absoluto del error
     
     def decay_epsilon(self, episode, decay_rate=0.001):
         """
@@ -203,6 +211,7 @@ def train_qlearning(n_episodes=5000, alpha=0.8, gamma=0.99,
         q_table: Tabla Q entrenada (como dict)
         rewards: Lista de recompensas por episodio
         avg_rewards: Lista de recompensas promedio cada eval_interval episodios
+        losses: Lista de pérdidas promedio cada eval_interval episodios
     """
     # Inicializar entorno FrozenLake-v1 (4x4) - DETERMINÍSTICO
     env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=False)
@@ -229,12 +238,16 @@ def train_qlearning(n_episodes=5000, alpha=0.8, gamma=0.99,
     rewards = []
     avg_rewards = []
     episode_rewards_buffer = []
+    losses = []
+    episode_losses_buffer = []
     
     # Loop de entrenamiento
     for episode in tqdm(range(n_episodes), desc="Entrenando Q-Learning", disable=not verbose):
         # Reiniciar entorno
         state, _ = env.reset()
         total_reward = 0
+        total_loss = 0
+        step_count = 0
         done = False
         
         while not done:
@@ -245,29 +258,39 @@ def train_qlearning(n_episodes=5000, alpha=0.8, gamma=0.99,
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
-            # Actualizar tabla Q
-            agent.update(state, action, reward, next_state, done)
+            # Actualizar tabla Q y obtener error temporal
+            td_error = agent.update(state, action, reward, next_state, done)
+            total_loss += td_error
+            step_count += 1
             
             # Actualizar estado y recompensa total
             state = next_state
             total_reward += reward
         
-        # Guardar recompensa del episodio
+        # Guardar recompensa y pérdida del episodio
         rewards.append(total_reward)
         episode_rewards_buffer.append(total_reward)
+        
+        # Calcular pérdida promedio por paso
+        avg_episode_loss = total_loss / max(step_count, 1)
+        episode_losses_buffer.append(avg_episode_loss)
         
         # Decaer epsilon
         agent.decay_epsilon(episode, decay_rate)
         
-        # Calcular recompensa promedio cada eval_interval episodios
+        # Calcular recompensa y pérdida promedio cada eval_interval episodios
         if (episode + 1) % eval_interval == 0:
             avg_reward = np.mean(episode_rewards_buffer)
+            avg_loss = np.mean(episode_losses_buffer)
             avg_rewards.append(avg_reward)
+            losses.append(avg_loss)
             episode_rewards_buffer = []  # Resetear buffer
+            episode_losses_buffer = []  # Resetear buffer
             
             if verbose and (episode + 1) % (eval_interval * 5) == 0:
                 print(f"Episodio {episode + 1}/{n_episodes}, "
                       f"Recompensa promedio: {avg_reward:.3f}, "
+                      f"Pérdida promedio: {avg_loss:.3f}, "
                       f"Epsilon: {agent.epsilon:.3f}")
     
     env.close()
@@ -278,9 +301,10 @@ def train_qlearning(n_episodes=5000, alpha=0.8, gamma=0.99,
     if verbose:
         print(f"Entrenamiento completado!")
         print(f"Recompensa promedio final: {np.mean(rewards[-eval_interval:]):.3f}")
+        print(f"Pérdida promedio final: {losses[-1]:.3f}")
         print(f"Epsilon final: {agent.epsilon:.3f}")
     
-    return q_table_dict, rewards, avg_rewards
+    return q_table_dict, rewards, avg_rewards, losses
 
 
 def evaluate_qlearning(q_table, n_eval_episodes=100, epsilon=0.0, verbose=True):
