@@ -103,7 +103,7 @@ def train_breakout(episodes: int = 1000,
                   lr: float = 5e-3,  # Aumentado significativamente para aprendizaje más rápido
                   buffer_capacity: int = 500000,
                   epsilon_start: float = 1.0,
-                  epsilon_min: float = 0.05,  # Reducido para más explotación
+                  epsilon_min: float = 0.001,  # Reducido para más explotación
                   epsilon_decay: float = 0.005,  # Decaimiento mucho más rápido
                   batch_size: int = 128,  # Aumentado para mejor estabilidad y aprendizaje
                   target_update_freq: int = 500,  # Actualización más frecuente
@@ -408,7 +408,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Entrenar DQN en Breakout-v5")
-    parser.add_argument("--episodes", type=int, default=1000, help="Número de episodios")
+    parser.add_argument("--episodes", type=int, default=10000, help="Número de episodios")
     parser.add_argument("--eval", action="store_true", help="Evaluar modelo existente")
     parser.add_argument("--model", type=str, default="checkpoints/dqn_breakout.pt", 
                        help="Ruta del modelo")

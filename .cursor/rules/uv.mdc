@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+
+# UV Rule
+- Always use `uv` instead of `pip`, `conda`, `poetry`, or `pipenv`
+- To install packages: `uv add <package>`
+- To run scripts: `uv run <script>`
+- To install dependencies: `uv sync`
+- To create virtual environments: `uv venv`
+- To activate environment: `source .venv/bin/activate` (if needed)
+- Prefer `uv` for all Python package management operations
