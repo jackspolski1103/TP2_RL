@@ -156,7 +156,15 @@ def train_breakout(episodes: int = 1000,
     print(f"Espacio de estados: {state_size}")
     print(f"Espacio de acciones: {action_size}")
     print(f"Episodios: {episodes}")
-    print(f"Dispositivo: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
+    
+    # Verificación detallada de GPU
+    if torch.cuda.is_available():
+        print(f"🚀 GPU disponible: {torch.cuda.get_device_name(0)}")
+        print(f"💾 Memoria GPU: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+        print(f"🔥 CUDA versión: {torch.version.cuda}")
+    else:
+        print("⚠️  GPU no disponible, usando CPU")
+    
     print("NOTA: MinAtar Breakout es más rápido que Atari Breakout!")
     
     # Inicializar agente DQN con CNN

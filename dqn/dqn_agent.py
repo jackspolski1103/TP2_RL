@@ -240,9 +240,14 @@ class DQNAgent:
         self.target_update_freq = target_update_freq
         self.start_learning = start_learning
         
-        # Dispositivo
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"DQN usando dispositivo: {self.device}")
+        # Dispositivo - optimizado para Google Colab
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+            print(f"🚀 DQN usando GPU: {torch.cuda.get_device_name(0)}")
+            print(f"💾 Memoria GPU disponible: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+        else:
+            self.device = torch.device("cpu")
+            print("⚠️  DQN usando CPU (GPU no disponible)")
         
         # Inicializar redes neuronales
         if model_type == "mlp":
